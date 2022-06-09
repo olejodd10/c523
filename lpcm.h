@@ -8,22 +8,24 @@
 typedef struct {
     double frequency;
     double amplitude;
-    // double phase; // No point in having this
+    double phase; 
 } SineWave;
 
 double evaluate(SineWave wave, double fs, int k);
 
-double evaluateCont(SineWave wave, double t);
+void shiftPhase(SineWave* wave, double fs, int k);
 
-double* sampleWave(SineWave wave, double fs, int n);
+void layer(SineWave wave, double* data, double fs, int n);
 
-double* sampleWaves(SineWave* waves, int nWaves, double fs, int n);
+void layerLinearFadeIn(SineWave wave, double* data, double fs, int n, int fadeLen);
+
+void layerLinearFadeOut(SineWave wave, double* data, double fs, int n, int fadeLen);
 
 double maxAmplitude(double* wave, int n);
 
 void scale(double* wave, int n, double factor);
 
 // https://en.wikipedia.org/wiki/Pulse-code_modulation
-uint8_t* lpcm8bit(double* data, int length, double maxAmplitude);
+void lpcmS16(double* inData, int16_t* outData, int length, double maxAmplitude);
 
 #endif

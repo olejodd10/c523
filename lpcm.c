@@ -1,36 +1,36 @@
 #include "lpcm.h"
 
 double evaluate(SineWave wave, double fs, int k) {
-    return wave.amplitude*sin(2*M_PI*k*wave.frequency/fs);
+    return wave.amplitude*sin(2*M_PI*k*wave.frequency/fs + wave.phase);
 }
 
-double evaluateCont(SineWave wave, double t) {
-    return wave.amplitude*sin(2*M_PI*wave.frequency*t);
+void shiftPhase(SineWave* wave, double fs, int k) {
+    wave->phase = fmod(wave->phase + 2*M_PI*k*wave->frequency/fs, 2*M_PI);
 }
 
-double* sampleWave(SineWave wave, double fs, int n) {
-    double* data = malloc(sizeof(double)*n);
+
+void layer(SineWave wave, double* data, double fs, int n) {
     for (int k = 0; k < n; ++k) {
-        data[k] = evaluate(wave, fs, k);
+        data[k] += evaluate(wave, fs, k);
     }
-    return data;
 }
 
-double* sampleWaves(SineWave* waves, int nWaves, double fs, int n) {
-    double* data = malloc(sizeof(double)*n);
+void layerLinearFadeIn(SineWave wave, double* data, double fs, int n, int fadeLen) {
     for (int k = 0; k < n; ++k) {
-        data[k] = 0;
-        for (int i = 0; i < nWaves; ++i) {
-            data[k] += evaluate(waves[i], fs, k);
-        }
+        data[k] += fmin(1.0, (double)k/fadeLen)*evaluate(wave, fs, k);
     }
-    return data;
+}
+
+void layerLinearFadeOut(SineWave wave, double* data, double fs, int n, int fadeLen) {
+    for (int k = 0; k < (n < fadeLen ? n : fadeLen); ++k) {
+        data[k] += ((double)(fadeLen-k)/fadeLen)*evaluate(wave, fs, k);
+    }
 }
 
 double maxAmplitude(double* wave, int n) {
     double max = 0.0;
     for (int i = 0; i < n; ++i) {
-        max = fmax(abs(wave[i]), max);
+        max = fmax(fabs(wave[i]), max);
     }
     return max;
 }
@@ -41,13 +41,10 @@ void scale(double* wave, int n, double factor) {
     }
 }
 
-// https://en.wikipedia.org/wiki/Pulse-code_modulation
 // Clips samples at [-maxAmplitude, maxAmplitude]
-uint8_t* lpcm8bit(double* data, int length, double maxAmplitude) {
-    uint8_t* pcmData = malloc(sizeof(uint8_t)*length);
+void lpcmS16(double* inData, int16_t* outData, int length, double maxAmplitude) {
     for (int i = 0; i < length; ++i) {
-        double clippedSample = fmax(fmin(maxAmplitude, data[i]), -maxAmplitude); // TEST THIS
-        pcmData[i] = ((clippedSample/maxAmplitude + 1)/2) * 255; // Linear mapping to 0..255
+        double clippedSample = fmax(fmin(maxAmplitude, inData[i]), -maxAmplitude); // TEST THIS
+        outData[i] = (clippedSample/maxAmplitude) * INT16_MAX;
     }
-    return pcmData;
 }
