@@ -2,7 +2,6 @@
 #define STDIN_MONITOR
 
 #include <stdio.h>
-#include <pthread.h>
 #include "noncanon.h"
 #include "notes.h"
 
@@ -10,6 +9,6 @@
 
 void *monitorStdin(void *arg);
 
-int isActive(Note note);
+int isActiveStdin(Note note);
 
 #endif

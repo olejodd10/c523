@@ -18,6 +18,8 @@ typedef enum {
     Note_C9, Note_Db9, Note_D9, Note_Eb9, Note_E9, Note_F9, Note_Gb9, Note_G9
 } Note;
 
+Note charToNote(char c);
+
 double frequency(Note note);
 
 #endif
